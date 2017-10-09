@@ -11,7 +11,6 @@ class Command {
   }
 
   get dbNamespace() {
-    return this.
   }
 
   tick() {

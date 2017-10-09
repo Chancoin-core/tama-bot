@@ -3,6 +3,7 @@
 const request = require('request-promise');
 const Command = require('renge').Command;
 const _       = require('lodash');
+const P       = require('bluebird');
 
 const BURNED_COINS = 3000000;
 
@@ -45,24 +46,30 @@ class Blockchain extends Command {
   }
 
   process(message) {
-    let subcmd = splitCmd(message.content)[1];
+    let subcmd = this.splitCmd(message.content)[1];
 
     // TODO subtract burned coins from supply
     if (subcommandExists(subcmd)) {
       this.getThing(subcmd)
         .then( x => message.reply(`${msgPrefix(subcmd)}${x}${msgPostfix(subcmd)}`) );
+    } else if (subcmd === 'time') {
+      P.all([this.getThing('hashrate'),
+             this.getThing('diff')])
+        .then( x => ( parseInt(x[1]) * 2 ** 32 ) / parseFloat(x[0]) )
+        .tap( x => console.log(x) )
+        .then( x => message.reply(`Estimated time to find block: ${secondsToHumanReadable(x)}`) );
+    } else if (subcmd == 'info') {
+      P.all([this.getThing('height'),
+             this.getThing('diff'),
+             this.getThing('hashrate')])
+        .then( x => message.reply(`We are at block #${x[0]} with difficulty ${x[1]} and network hashrate ${x[2]}`) );
     } else {
       message.reply('Syntax: `block info|height|hashrate|time|difficulty|supply`');
     }
   }
 
   getThing(thing) {
-    return request.get(SUBCOMMAND_URLS[thing]);
-  }
-
-
-  urlForSubcommand(sub) {
-    
+    return request.get({uri: SUBCOMMAND_URLS[thing]});
   }
 }
 
@@ -70,8 +77,31 @@ function subcommandExists(subcmd) {
   return _.includes(Object.keys(SUBCOMMAND_URLS), subcmd);
 }
 
-function splitCmd(string) {
-  return string.split(' ');
-};
+function secondsToHumanReadable(duration){
+  var hour = 0;
+  var min = 0;
+  var sec = 0;
+
+  if (duration){
+    if (duration >= 60) {
+      min = Math.floor(duration / 60);
+      sec = duration % 60;
+    }
+    else {
+      sec = duration;
+    }
+
+    if (min >= 60) {
+      hour = Math.floor(min / 60);
+      min = min - hour * 60;
+    }
+
+    if ( hour < 10 ) { hour = '0'+hour; }
+    if ( min < 10 ) { min = '0'+min; }
+    if ( sec < 10 ) { sec = '0'+sec; }
+  }
+  
+  return hour +":"+ min +":"+ Math.trunc(sec);
+}
 
 module.exports = Blockchain;
