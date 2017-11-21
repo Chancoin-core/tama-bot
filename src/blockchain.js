@@ -64,7 +64,7 @@ class Blockchain extends Command {
              this.getThing('hashrate')])
         .then( x => message.reply(`We are at block #${x[0]} with difficulty ${x[1]} and network hashrate ${x[2]}`) );
     } else {
-      message.reply('Syntax: `block info|height|hashrate|time|difficulty|supply`');
+      message.reply('Syntax: `block info|height|hashrate|time|diff|supply`');
     }
   }
 
