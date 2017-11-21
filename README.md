@@ -1,12 +1,14 @@
 # RENGEBOT
 
 # Framework todo
-
  - auto-load and compile templates
+ - add subcommands
+ - add wrapper for message? Is that a smell?
  - Commands can override their db namespaces
 # Feature Wishlist
 
 # TODO
+* Subtract burned coins from `block supply` command
 * Register user
 * Email verification for user registration
 * Use arrow methods where possible to clean up

@@ -11,22 +11,31 @@ const SUBCOMMAND_URLS = {
   'supply': 'https://www.blockexperts.com/api?coin=4chn&action=getmoneysupply',
   'height': 'http://chancoin.info/api/getblockcount',
   'hashrate': 'http://chancoin.info/api/getnetworkhashps',
-  'diff': 'http://chancoin.info/api/getdifficulty'
+  'diff': 'http://chancoin.info/api/getdifficulty',
+  'price': 'http://api.coinmarketcap.com/v1/ticker/chancoin'
 };
 
 const MSG_PREFIXES = {
   'supply': 'The total CHAN supply (including burned coins) is ',
   'height': 'The current block height is ',
   'hashrate': 'The current network hash rate is ',
-  'diff': 'The current block difficulty is '
+  'diff': 'The current block difficulty is ',
+  'price': 'The price of 4CHN on coinmarketcap.com is currently '
 };
 
 const MSG_POSTFIXES = {
   'supply': '',
   'height': '',
   'hashrate': 'hashes',
-  'diff': ''
+  'diff': '',
+  'price': ' BTC.'
 };
+
+const MSG_FUNCTIONS = {
+  'price': function(data) {
+    return data[0]['price_btc'];
+  }
+}
 
 function msgPrefix(cmd) {
   return MSG_PREFIXES[cmd];
@@ -48,7 +57,6 @@ class Blockchain extends Command {
   process(message) {
     let subcmd = this.splitCmd(message.content)[1];
 
-    // TODO subtract burned coins from supply
     if (subcommandExists(subcmd)) {
       this.getThing(subcmd)
         .then( x => message.reply(`${msgPrefix(subcmd)}${x}${msgPostfix(subcmd)}`) );
@@ -64,12 +72,14 @@ class Blockchain extends Command {
              this.getThing('hashrate')])
         .then( x => message.reply(`We are at block #${x[0]} with difficulty ${x[1]} and network hashrate ${x[2]}`) );
     } else {
-      message.reply('Syntax: `block info|height|hashrate|time|diff|supply`');
+      message.reply('Syntax: `block info|height|hashrate|time|diff|supply|price`');
     }
   }
 
   getThing(thing) {
-    return request.get({uri: SUBCOMMAND_URLS[thing]});
+    return request.get({uri: SUBCOMMAND_URLS[thing]})
+      .then( (response) => JSON.parse(response) )
+      .then( (stuff) => { console.log(typeof stuff); return typeof stuff === 'object' ? stuff[0].price_btc : stuff } );
   }
 }
 
