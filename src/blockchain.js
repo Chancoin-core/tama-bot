@@ -58,7 +58,7 @@ class Blockchain extends Command {
         .then( x => ( parseInt(x[1]) * 2 ** 32 ) / parseFloat(x[0]) )
         .tap( x => console.log(x) )
         .then( x => message.reply(`Estimated time to find block: ${secondsToHumanReadable(x)}`) );
-    } else if (subcmd == 'info') {
+    } else if (subcmd === 'info') {
       P.all([this.getThing('height'),
              this.getThing('diff'),
              this.getThing('hashrate')])
