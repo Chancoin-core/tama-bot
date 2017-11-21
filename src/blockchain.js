@@ -4,6 +4,7 @@ const request = require('request-promise');
 const Command = require('renge').Command;
 const _       = require('lodash');
 const P       = require('bluebird');
+const R       = require('ramda');
 
 const BURNED_COINS = 3000000;
 
@@ -33,7 +34,10 @@ const MSG_POSTFIXES = {
 
 const MSG_FUNCTIONS = {
   'price': function(data) {
-    return data[0]['price_btc'];
+    return JSON.parse(data)[0]['price_btc'];
+  },
+  'supply': function(data) {
+    return parseInt(data) - BURNED_COINS;
   }
 }
 
@@ -78,13 +82,17 @@ class Blockchain extends Command {
 
   getThing(thing) {
     return request.get({uri: SUBCOMMAND_URLS[thing]})
-      .then( (response) => JSON.parse(response) )
+      .then( R.when(x => subcommandHasFunction(thing), (response) => MSG_FUNCTIONS[thing](response)) )
       .then( (stuff) => { console.log(typeof stuff); return typeof stuff === 'object' ? stuff[0].price_btc : stuff } );
   }
 }
 
 function subcommandExists(subcmd) {
   return _.includes(Object.keys(SUBCOMMAND_URLS), subcmd);
+}
+
+function subcommandHasFunction(subcmd) {
+    return _.includes(Object.keys(MSG_FUNCTIONS), subcmd);
 }
 
 function secondsToHumanReadable(duration){
