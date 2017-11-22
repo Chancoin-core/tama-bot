@@ -41,7 +41,7 @@ class Wallet extends Command {
     } else if (subCmd === 'balance') {
       return this.getOrCreateAddressForUser(message.author)
         .then(getBalanceForAccount)
-        .then( x => message.reply(`Your balance is ${x} CHAN`); );
+        .then( x => message.reply(`Your balance is ${x} CHAN`) );
     } else if (subCmd === 'tip') {
       message.reply("This has yet to be implemented, onii-chan.");
     } else if (subCmd === 'rain') {
