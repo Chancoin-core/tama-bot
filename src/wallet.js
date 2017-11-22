@@ -39,11 +39,20 @@ class Wallet extends Command {
         .then( x => message.reply(`Transaction ID: ${x}`) )
         .catch( x => this.handleError(x) );
     } else if (subCmd === 'balance') {
-
+      return this.getOrCreateAddressForUser(message.author)
+        .then(getBalanceForAccount)
+        .then( x => message.reply(`Your balance is ${x} CHAN`); );
     } else if (subCmd === 'tip') {
-
+      message.reply("This has yet to be implemented, onii-chan.");
     } else if (subCmd === 'rain') {
+      message.reply("This has yet to be implemented, onii-chan.");
+    } else {
+      message.reply("Syntax is `wallet addr|withdraw|balance|tip|rain`")
     }
+  }
+
+  getBalanceForAccount(account) {
+    return client.getBalance(account);
   }
 
   getOrCreateAddressForUser(user) {
