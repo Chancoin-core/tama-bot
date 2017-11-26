@@ -47,11 +47,12 @@ class Wallet extends Command {
         .then( x => message.reply(`Your balance is ${x} CHAN`) );
     } else if (subCmd === 'tip') {
       let fromId   = message.author.id;
-      let toId     = this.userTagToUser(message, split[2]).id;
+      let toUser   = this.userTagToUser(message, split[2]);
+      let toId     = toUser.id;
       let amount = split[3];
       debugger;
-      this.moveCoins({from: fromId, to: toId, amount: amount});
-        // .then( x => message.reply(`Tipped ${amount} to ${to} Result - ${x}`);
+      this.moveCoins({from: fromId, to: toId, amount: amount})
+        .then( x => message.reply(`Tipped ${amount} to ${to} Result - ${x}`) );
     } else if (subCmd === 'rain') {
       message.reply("This has yet to be implemented, onii-chan.");
     } else if (subCmd === 'donate') {
@@ -90,7 +91,9 @@ class Wallet extends Command {
 
   userTagToUser(message, idString) {
     let userId = idString.substring(2, idString.length - 1);
-    return message.guild.members.find('id', userId);
+    let res = message.guild.members.find('id', userId).user;
+    console.log(res);
+    return res;
   }
 }
 
