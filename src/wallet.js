@@ -17,6 +17,8 @@ const ERROR_CODE_MAP = {
   '-3': 'Invalid amount.'
 };
 
+const DONATION_ADDRESS = process.env.DONATION_ADDRESS;
+
 class Wallet extends Command {
   constructor(context) {
     super(context);
@@ -27,7 +29,8 @@ class Wallet extends Command {
   }
 
   process(message) {
-    let subCmd = this.splitCmd(message.content)[1];
+    let split  = this.splitCmd(message.content);
+    let subCmd = split[1];
     if (subCmd === 'addr') {
       return this.getOrCreateAddressForUser(message.author)
         .then( x => message.reply(`Your address is ${x}`) )
@@ -39,15 +42,45 @@ class Wallet extends Command {
         .then( x => message.reply(`Transaction ID: ${x}`) )
         .catch( x => this.handleError(x) );
     } else if (subCmd === 'balance') {
-
+      return this.getOrCreateAddressForUser(message.author)
+        .then( x => this.getBalanceForAccount(this.accountIdForUser(message.author)) )
+        .then( x => message.reply(`Your balance is ${x} CHAN`) );
     } else if (subCmd === 'tip') {
-
+      let from   = message.author;
+      let to     = split[2];
+      let amount = split[3];
+      this.moveCoins({from: from, to: to, amount: amount})
+        .then( x => message.reply(`Tipped ${amount} to ${to.username} Result - ${x}`) );
     } else if (subCmd === 'rain') {
+      message.reply("This has yet to be implemented, onii-chan.");
+    } else if (subCmd === 'donate') {
+      const address = this.splitCmd(message.content)[2];
+      const amount  = this.splitCmd(message.content)[3];
+      this.sendCoinsToAddress(address, amount)
+        .then( x => message.reply('Thank you for your donation!') );
+    } else {
+      message.reply("Syntax is `wallet addr|withdraw|balance|tip|rain|donate`");
     }
+  }
+
+  getBalanceForAccount(account) {
+    return client.getBalance(account);
+  }
+
+  accountIdForUser(user) {
+    return user.id;
   }
 
   getOrCreateAddressForUser(user) {
     return client.getAccountAddress(user.id);
+  }
+
+  moveCoins(opts) {
+    return client.move(opts.from, opts.to, opts.amount);
+  }
+
+  sendCoinsToAddress(address, amount) {
+    return client.sendToAddress(address, amount);
   }
 
   handleError(err) {
