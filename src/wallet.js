@@ -46,11 +46,13 @@ class Wallet extends Command {
         .then( x => this.getBalanceForAccount(this.accountIdForUser(message.author)) )
         .then( x => message.reply(`Your balance is ${x} CHAN`) );
     } else if (subCmd === 'tip') {
+      console.log(message.mentions.users.first());
       let fromId   = message.author.id;
-      let toId   = this.accountIdForUserMention(split[2]);
-      let amount = split[3];
+      let toUser   = message.mentions.users.first();
+      let toId     = toUser.id;
+      let amount   = split[3];
       this.moveCoins({from: fromId, to: toId, amount: amount})
-        .then( x => message.reply(`Tipped ${amount} to ${toId} Result - ${x}`) )
+        .then( x => message.reply(`Tipped ${amount} to ${toUser.username} Result - ${x}`) )
         .catch( x => console.log(x.stack) );
     } else if (subCmd === 'rain') {
       message.reply("This has yet to be implemented, onii-chan.");
@@ -70,10 +72,6 @@ class Wallet extends Command {
 
   accountIdForUser(user) {
     return user.id;
-  }
-
-  accountIdForUserMention(userMention) {
-    return userMention.substring(2, userMention.length - 1);
   }
 
   getOrCreateAddressForUser(user) {
