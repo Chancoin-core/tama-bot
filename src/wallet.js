@@ -46,11 +46,12 @@ class Wallet extends Command {
         .then( x => this.getBalanceForAccount(this.accountIdForUser(message.author)) )
         .then( x => message.reply(`Your balance is ${x} CHAN`) );
     } else if (subCmd === 'tip') {
-      let from   = message.author;
-      let to     = split[2];
+      let fromId   = message.author.id;
+      let toId     = this.userTagToUser(message, split[2]).id;
       let amount = split[3];
-      this.moveCoins({from: from, to: to, amount: amount})
-        .then( x => message.reply(`Tipped ${amount} to ${to.username} Result - ${x}`) );
+      debugger;
+      this.moveCoins({from: fromId, to: toId, amount: amount});
+        // .then( x => message.reply(`Tipped ${amount} to ${to} Result - ${x}`);
     } else if (subCmd === 'rain') {
       message.reply("This has yet to be implemented, onii-chan.");
     } else if (subCmd === 'donate') {
@@ -85,6 +86,12 @@ class Wallet extends Command {
 
   handleError(err) {
     console.log(err);
+  }
+
+  userTagToUser(message, idString) {
+    let user = idString.substring(2, idString.length - 1);
+    let res = message.guild.members.find('id', user);
+    return res.user;
   }
 }
 
