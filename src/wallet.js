@@ -89,9 +89,8 @@ class Wallet extends Command {
   }
 
   userTagToUser(message, idString) {
-    let user = idString.substring(2, idString.length - 1);
-    let res = message.guild.members.find('id', user);
-    return res.user;
+    let userId = idString.substring(2, idString.length - 1);
+    return message.guild.members.find('id', userId);
   }
 }
 
