@@ -47,11 +47,10 @@ class Wallet extends Command {
         .then( x => message.reply(`Your balance is ${x} CHAN`) );
     } else if (subCmd === 'tip') {
       let fromId   = message.author.id;
-      let toUser   = this.accountIdForUserMention(split[2]);
-      let toId     = toUser.id;
+      let toId   = this.accountIdForUserMention(split[2]);
       let amount = split[3];
       this.moveCoins({from: fromId, to: toId, amount: amount})
-        .then( x => message.reply(`Tipped ${amount} to ${to} Result - ${x}`) )
+        .then( x => message.reply(`Tipped ${amount} to ${toId} Result - ${x}`) )
         .catch( x => console.log(x.stack) );
     } else if (subCmd === 'rain') {
       message.reply("This has yet to be implemented, onii-chan.");
