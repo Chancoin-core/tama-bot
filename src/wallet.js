@@ -81,7 +81,7 @@ class Wallet extends Command {
   }
 
   moveCoins(opts) {
-    return client.move(opts.from, opts.to, opts.amount);
+    return client.move(opts.from, parseFloat(opts), opts.amount);
   }
 
   sendCoinsToAddress(address, amount) {
