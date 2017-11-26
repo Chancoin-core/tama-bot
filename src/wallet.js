@@ -51,7 +51,8 @@ class Wallet extends Command {
       let toId     = toUser.id;
       let amount = split[3];
       this.moveCoins({from: fromId, to: toId, amount: amount})
-        .then( x => message.reply(`Tipped ${amount} to ${to} Result - ${x}`) );
+        .then( x => message.reply(`Tipped ${amount} to ${to} Result - ${x}`) )
+        .catch( x => console.log(x.stack) );
     } else if (subCmd === 'rain') {
       message.reply("This has yet to be implemented, onii-chan.");
     } else if (subCmd === 'donate') {
