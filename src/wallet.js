@@ -53,10 +53,13 @@ class Wallet extends Command {
       let toUser   = message.mentions.users.first();
       let toId     = toUser.id;
       let amount   = split[3];
-
+      if (toId) {
       this.moveCoins({from: fromId, to: toId, amount: amount})
         .then( x => message.reply(`Tipped ${amount} to ${toUser.username} Result - ${x}`) )
-        .catch( x => handleError(message, x) );
+          .catch( x => handleError(message, x) );
+      } else {
+        message.reply("Can't find that user, sorry.");
+      }
     } else if (subCmd === 'donate') {
       const address = this.splitCmd(message.content)[2];
       const amount  = this.splitCmd(message.content)[3];
