@@ -34,7 +34,6 @@ class Register extends Command {
   }
 
   createUserRegistration(msg) {
-    console.log("2");    
     return this.context.db.put(msg.author, {
       id: msg.author
     }, function(err, res) {

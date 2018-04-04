@@ -18,4 +18,3 @@ server.registerCommand(Blockchain);
 server.registerCommand(Wallet);
 
 server.run();
-

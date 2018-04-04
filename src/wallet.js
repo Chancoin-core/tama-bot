@@ -34,44 +34,42 @@ class Wallet extends Command {
     if (subCmd === 'addr') {
       return this.getOrCreateAddressForUser(message.author)
         .then( x => message.reply(`Your address is ${x}`) )
-        .catch( x => this.handleError(x) );      
+        .catch( x => this.handleError(x) );
     } else if (subCmd === 'withdraw') {
       const address = this.splitCmd(message.content)[2];
       const amount  = this.splitCmd(message.content)[3];
+      console.log(address);
       return client.sendToAddress(address, amount)
         .then( x => message.reply(`Transaction ID: ${x}`) )
-        .catch( x => this.handleError(x) );
+        .catch( x => this.handleError(message, x) );
     } else if (subCmd === 'balance') {
       return this.getOrCreateAddressForUser(message.author)
-        .then( x => this.getBalanceForAccount(this.accountIdForUser(message.author)) )
-        .then( x => message.reply(`Your balance is ${x} CHAN`) );
+        .then( x => this.getBalanceForAccount(message.author.id) )
+        .then( x => message.reply(`Your balance is ${x} CHAN`) )
+        .catch( x => handleError(message, x) )
     } else if (subCmd === 'tip') {
       console.log(message.mentions.users.first());
       let fromId   = message.author.id;
       let toUser   = message.mentions.users.first();
       let toId     = toUser.id;
       let amount   = split[3];
+
       this.moveCoins({from: fromId, to: toId, amount: amount})
         .then( x => message.reply(`Tipped ${amount} to ${toUser.username} Result - ${x}`) )
-        .catch( x => console.log(x.stack) );
-    } else if (subCmd === 'rain') {
-      message.reply("This has yet to be implemented, onii-chan.");
+        .catch( x => handleError(message, x) );
     } else if (subCmd === 'donate') {
       const address = this.splitCmd(message.content)[2];
       const amount  = this.splitCmd(message.content)[3];
       this.sendCoinsToAddress(address, amount)
-        .then( x => message.reply('Thank you for your donation!') );
+        .then( x => message.reply('Thank you for your donation!') )
+        .catch( x => handleError(message, x ) )
     } else {
-      message.reply("Syntax is `wallet addr|withdraw|balance|tip|rain|donate`");
+      message.reply("Syntax is `wallet addr|withdraw|balance|tip|donate`");
     }
-  }
+  };
 
   getBalanceForAccount(account) {
     return client.getBalance(account);
-  }
-
-  accountIdForUser(user) {
-    return user.id;
   }
 
   getOrCreateAddressForUser(user) {
@@ -86,14 +84,9 @@ class Wallet extends Command {
     return client.sendToAddress(address, amount);
   }
 
-  handleError(err) {
+  handleError(message, err) {
+    message.reply(`An error was encountered - ${err}`);
     console.log(err);
-  }
-
-  userTagToUser(message, idString) {
-    let userId = idString.substring(2, idString.length - 1);
-    let res = message.guild.members.find('id', userId).user;
-    return res;
   }
 }
 

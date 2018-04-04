@@ -1,4 +1,3 @@
-'use strict';
 const Handlebars = require('handlebars');
 const fs         = require('fs');
 
