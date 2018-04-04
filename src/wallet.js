@@ -51,7 +51,7 @@ class Wallet extends Command {
       console.log(message.mentions.users.first());
       let fromId   = message.author.id;
       let toUser   = message.mentions.users.first();
-      let toId     = toUser.id;
+      let toId     = toUser ? toUser.id : null;
       let amount   = split[3];
       if (toId) {
       this.moveCoins({from: fromId, to: toId, amount: amount})
