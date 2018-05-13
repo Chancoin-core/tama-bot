@@ -7,7 +7,8 @@ const Blockchain = require('./src/blockchain.js');
 const Wallet     = require('./src/wallet.js');
 
 const server = new Renge.Rengebot({
-  port: 1337,
+  port: 5555,
+  prefix: 'tama',
   botToken: process.env.BOT_TOKEN
 });
 

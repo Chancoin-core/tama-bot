@@ -410,7 +410,7 @@ diff@3.2.0:
   version "3.2.0"
   resolved "https://registry.yarnpkg.com/diff/-/diff-3.2.0.tgz#c9ce393a4b7cbd0b058a725c93df299027868ff9"
 
-discord.js@^11.0.0, discord.js@^11.2.1:
+discord.js@^11.2.1, discord.js@^11.3.2:
   version "11.3.2"
   resolved "https://registry.yarnpkg.com/discord.js/-/discord.js-11.3.2.tgz#3c4074c1cb1a4916582fb96ded5ffa1324411f95"
   dependencies:
@@ -1438,9 +1438,9 @@ ref@1:
     debug "2"
     nan "2"
 
-renge@0.0.3:
-  version "0.0.3"
-  resolved "https://registry.yarnpkg.com/renge/-/renge-0.0.3.tgz#9e27b2bc8b0c09ff9693306a4bb11b2566e10fff"
+renge@^0.0.10:
+  version "0.0.10"
+  resolved "https://registry.yarnpkg.com/renge/-/renge-0.0.10.tgz#3955684ec694da8ef8848541b5b8a71d4cb25b2e"
   dependencies:
     bluebird "^3.5.0"
     bufferutil "^3.0.2"

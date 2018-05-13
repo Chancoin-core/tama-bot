@@ -55,6 +55,7 @@ class Blockchain extends Command {
   }
 
   filter(message) {
+    console.log("!"+ message.content);
     return message.content.match(/^block/);
   }
 
