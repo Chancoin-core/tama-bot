@@ -10,6 +10,7 @@ const CATEGORIES_PER_GAME = 6;
 const QUESTIONS_PER_CATEGORY = 5;
 
 let currentQuestion,
+    allPlayers,
     currentPlayer,
     currentChannel,
     questionData,
@@ -24,7 +25,7 @@ function questionsRemaining() {
 
 // Get random int, starting with 1
 function getRandomInt(max) {
-  return Math.floor(Math.random() * Math.floor(max)) + 1;
+  return Math.random() * (max - 1) + 1;
 }
 
 let questionTimeoutSchedule,
@@ -40,6 +41,7 @@ class Trivia extends Command {
     // this.startTrivia();
   }
 
+  // LIFECYCLE METHODS/HOOKS --------------
   subscribeToAllMessages() {
     return true;
   }
@@ -64,15 +66,6 @@ class Trivia extends Command {
     }
   }
 
-  cancelQuestionTimeout() {
-    currentQuestionTimeout.clear();
-  }
-
-  cleanupAfterQuestion() {
-      waitingForAnswer = false;
-      questionsRemaining -= 1;
-  }
-
   process(message) {
     let subcmd = this.splitCmd(message.content)[1];
 
@@ -83,11 +76,24 @@ class Trivia extends Command {
     }
   }
 
+  // END Lifecycle methods ----------------
+
+  cancelQuestionTimeout() {
+    currentQuestionTimeout.clear();
+  }
+
+  cleanupAfterQuestion() {
+      waitingForAnswer = false;
+      questionsRemaining -= 1;
+  }
+
   initializeGame(message) {
-    currentlyRunning  = true;
-    currentChannel = message.channel;
-    currentPlayer = message.author;
-    scores = {};
+    currentlyRunning = true;
+    currentChannel   = message.channel;
+    currentPlayer    = message.author;
+    allPlayers       = [];
+    scores           = {};
+
     return P.resolve(null);
   }
 
@@ -115,22 +121,19 @@ class Trivia extends Command {
 
   buildBoardFields() {
     return questionData.map(categoryToBoardField);
-
-    // const values = [200, 400, 600, 800, 1000];
-    // const res = [values];
-    // debugger;
-    // res.push( R.reduce( (memo, x) => memo += " " + x.title, res, questionData  ) );
-    // return questionData;
   }
 
   fetchQuestions() {
-    let offset = getRandomInt(0, 9000);
+    let offset = getRandomInt(0, 12000);
+    console.log(offset);
     return request.get(`http://jservice.io/api/categories?offset=${offset}&count=6`)
       .then(JSON.parse)
+      .tap( console.log )
       .map( x => request.get(`http://jservice.io/api/category?id=${x.id}`) )
       .map( x => JSON.parse(x) )
       .then( x => questionData = x );
   }
+
   awardPoints(message) {
     let player       = message.author;
     let currentScore = scores[message.author] || 0;
@@ -190,6 +193,7 @@ function setCurrentQuestion(question) {
   currentQuestion = JSON.parse(question)[0];
   return question;
 }
+
 function categoryToBoardField(categoryData, idx) {
   return {
     name: `${idx}) ${categoryData.title}`,
