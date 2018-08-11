@@ -9,7 +9,6 @@
 
 # TODO for Trivia -
  - if question is answered print (XXX) instead of value
- - Prompt player to pick question (pick whoever started game for new game)
  - Timeout on player prompt - 30 seconds
  - Once timeout or player responds with '(category) (value)', print question clue and start timeout
  - Once player answers - if correct, add points, mark question answered, prompt again. if wrong, prompt next player to pick question.
@@ -29,7 +28,8 @@
 * Decide on async job queue handling (zeromq? redis?)
 
 # DONE
- - Put number of category before each category
+- Prompt player to pick question (pick whoever started game for new game)
+- Put number of category before each category
 * Make message accessible thru context (shoddily)
 * Clean out logging statements
 * Add bluebird

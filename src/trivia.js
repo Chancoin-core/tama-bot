@@ -116,7 +116,8 @@ class Trivia extends Command {
       },
       title: "Trivia Board",
       fields: this.buildBoardFields()
-    } });
+    } })
+      .then(promptPlayerToChooseQuestion);
   }
 
   buildBoardFields() {
@@ -201,4 +202,7 @@ function categoryToBoardField(categoryData, idx) {
   };
 }
 
+function promptPlayerToChooseQuestion() {
+  currentChannel.send(`${currentPlayer.toString()} You have 30 seconds to pick a question...`);
+}
 module.exports = Trivia;
