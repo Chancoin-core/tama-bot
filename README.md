@@ -7,7 +7,16 @@
  - Commands can override their db namespaces
 # Feature Wishlist
 
-# TODO
+# TODO for Trivia -
+ - if question is answered print (XXX) instead of value
+ - Prompt player to pick question (pick whoever started game for new game)
+ - Timeout on player prompt - 30 seconds
+ - Once timeout or player responds with '(category) (value)', print question clue and start timeout
+ - Once player answers - if correct, add points, mark question answered, prompt again. if wrong, prompt next player to pick question.
+ - show scores on board with questions
+ - Once all questions is answered, whoever wins gets dat skrilla
+
+# Fuck these TODOS, do my TODOs above
 * Subtract burned coins from `block supply` command
 * Register user
 * Email verification for user registration
@@ -20,6 +29,7 @@
 * Decide on async job queue handling (zeromq? redis?)
 
 # DONE
+ - Put number of category before each category
 * Make message accessible thru context (shoddily)
 * Clean out logging statements
 * Add bluebird
