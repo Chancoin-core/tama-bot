@@ -1,5 +1,6 @@
 'use strict';
 
+const timer   = require('timers');
 const request = require('request-promise');
 const Command = require('renge').Command;
 const _       = require('lodash');
@@ -9,18 +10,31 @@ const R       = require('ramda');
 const CATEGORIES_PER_GAME = 6;
 const QUESTIONS_PER_CATEGORY = 5;
 
+const QUESTION_ANSWER_TIMEOUT = 30000;
+const QUESTION_SELECT_TIMEOUT = 30000;
+
+const valueIndexMap = {
+  "100"  : 0,
+  "200"  : 1,
+  "300"  : 2,
+  "400"  : 3,
+  "500" : 4
+};
+
 let currentQuestion,
     allPlayers,
     currentPlayer,
     currentChannel,
     questionData,
     scores           = {},
-    currentQuestionTimeout,
+    currentTimeout,
     currentlyRunning = false,
-    waitingForAnswer = false;
+    waitingForAnswer = false,
+    waitingForQuestionSelect = false;
 
 function questionsRemaining() {
-
+  // TODO
+  return 10;
 }
 
 // Get random int, starting with 1
@@ -36,8 +50,6 @@ class Trivia extends Command {
     super(context);
     this.context.allMessages.on('message', this.onAnyMessage.bind(this));
 
-    questionTimeoutSchedule     = this.context.later.parse.text('every 30 seconds');
-    pickQuestionTimeoutSchedule = this.context.later.parse.text('every 30 seconds');
     // this.startTrivia();
   }
 
@@ -53,16 +65,18 @@ class Trivia extends Command {
   onAnyMessage(message) {
     if ( this.messageIsFromPlayer(message) &&
          waitingForAnswer &&
-         this.answerIsCorrect(message) ) {
-      this.cancelQuestionTimeout();
-      this.awardPoints(message);
-      this.cleanupAfterQuestion();
+         answerIsCorrect(message) ) {
+      cancelTimeout();
+      awardPoints(message);
+      cleanupAfterQuestion();
 
       if (questionsRemaining <= 0) {
-        this.finalizeGame( message );
+        finalizeGame( message );
       } else {
-        this.askQuestion( message );
+        askQuestion( message );
       }
+    } else if ( waitingForQuestionSelect && messageIsFromPromptedPlayer(message) ) {
+      parseQuestionSelection(message);
     }
   }
 
@@ -77,17 +91,43 @@ class Trivia extends Command {
   }
 
   // END Lifecycle methods ----------------
-
-  cancelQuestionTimeout() {
-    currentQuestionTimeout.clear();
+  printBoard() {
+    currentChannel.send({ embed: {
+      author: {
+        name: this.context.bot.user.username,
+        icon_url: this.context.bot.user.avatarURL
+      },
+      title: "Trivia Board",
+      fields: buildBoardFields()
+    } })
+      .then(promptPlayerToChooseQuestion);
   }
 
-  cleanupAfterQuestion() {
-      waitingForAnswer = false;
-      questionsRemaining -= 1;
+  messageIsFromPlayer(message) {
+    return message.author !== this.context.bot.user;
   }
 
-  initializeGame(message) {
+  startTrivia(message) {
+    if (currentlyRunning) {
+      message.reply( "We're already playing!" );
+    } else {
+      initializeGame( message );
+      fetchQuestions()
+        .then( this.printBoard.bind(this) );
+    }
+  }
+}
+
+function cancelTimeout() {
+  timer.clearTimeout(currentTimeout);
+  }
+
+function cleanupAfterQuestion() {
+    waitingForAnswer = false;
+    questionsRemaining -= 1;
+  }
+
+function initializeGame(message) {
     currentlyRunning = true;
     currentChannel   = message.channel;
     currentPlayer    = message.author;
@@ -97,77 +137,29 @@ class Trivia extends Command {
     return P.resolve(null);
   }
 
-  startTrivia(message) {
-    debugger;
-    if (currentlyRunning) {
-      message.reply( "We're already playing!" );
-    } else {
-      this.initializeGame( message );
-      this.fetchQuestions()
-        .then( this.printBoard.bind(this) );
-    }
-  }
-
-  printBoard() {
-    currentChannel.send({ embed: {
-      author: {
-        name: this.context.bot.user.username,
-        icon_url: this.context.bot.user.avatarURL
-      },
-      title: "Trivia Board",
-      fields: this.buildBoardFields()
-    } })
-      .then(promptPlayerToChooseQuestion);
-  }
-
-  buildBoardFields() {
+function buildBoardFields() {
     return questionData.map(categoryToBoardField);
   }
 
-  fetchQuestions() {
-    let offset = getRandomInt(0, 12000);
-    console.log(offset);
+function  fetchQuestions() {
+    let offset = getRandomInt(12000);
     return request.get(`http://jservice.io/api/categories?offset=${offset}&count=6`)
       .then(JSON.parse)
-      .tap( console.log )
       .map( x => request.get(`http://jservice.io/api/category?id=${x.id}`) )
       .map( x => JSON.parse(x) )
       .then( x => questionData = x );
   }
 
-  awardPoints(message) {
+function awardPoints(message) {
     let player       = message.author;
     let currentScore = scores[message.author] || 0;
 
     scores[player] = currentScore += 10;
   }
 
-  askQuestion(message) {
-    waitingForAnswer = true;
-    return this.getQuestion()
-      .then(setCurrentQuestion)
-      .then( _ => console.log(currentQuestion) )
-      .then( _ => currentChannel.send(currentQuestion.question) )
-      .then( _ => this.startQuestionTimer());
-  }
-
-  startQuestionTimer() {
-    currentQuestionTimeout = this.context.later.setTimeout(this.questionTimeout.bind(this), questionTimeoutSchedule);
-  }
-
-  questionTimeout() {
-    currentChannel.send(`Times up! The answer was ${currentQuestion.answer}`);
-    this.cleanupAfterQuestion();
-      if (questionsRemaining <= 0) {
-        this.finalizeGame();
-      } else {
-        this.askQuestion();
-      }
-  }
-
-  // TODO - Do we want to remove punctuation?
-  // TODO - Handle articles (a, the)
-  answerIsCorrect(message) {
+// TODO - Do we want to remove punctuation?
+// TODO - Handle articles (a, the)
+function answerIsCorrect(message) {
     console.log("Answer: ", message.content);
 
     if (message.content.toLowerCase() == currentQuestion.answer.toLowerCase()) {
@@ -176,18 +168,21 @@ class Trivia extends Command {
     return false;
   }
 
-  messageIsFromPlayer(message) {
-    return message.author !== this.context.bot.user;
-  }
 
-  finalizeGame() {
-    currentChannel.send( "Game is over!" );
-    currentChannel.send( JSON.stringify(scores) );
-  }
+function finalizeGame() {
+  currentChannel.send( "Game is over!" );
+  currentChannel.send( JSON.stringify(scores) );
+}
 
-  getQuestion() {
-    return request.get('http://jservice.io/api/random');
-  }
+function promptPlayerToChooseQuestion() {
+  currentChannel.send(`${currentPlayer.toString()} You have 30 seconds to pick a question...`);
+  timer.setTimeout(questionSelectionTimeout, QUESTION_SELECT_TIMEOUT);
+  waitingForQuestionSelect = true;
+}
+
+function questionSelectionTimeout() {
+  currentChannel.send("Time out on question selection, fuck you, game is over.");
+  finalizeGame();
 }
 
 function setCurrentQuestion(question) {
@@ -202,7 +197,46 @@ function categoryToBoardField(categoryData, idx) {
   };
 }
 
-function promptPlayerToChooseQuestion() {
-  currentChannel.send(`${currentPlayer.toString()} You have 30 seconds to pick a question...`);
+function messageIsFromPromptedPlayer(message) {
+  return message.author === currentPlayer;
 }
+
+// TODO handle malformed response from user
+function parseQuestionSelection(message) {
+  const split = message.content.split(' ');
+  const category = parseInt(split[0]);
+  const index = valueIndexMap[split[1]];
+  console.log("Category ", category);
+  console.log("Index ", index);
+  console.log(questionData);
+
+  currentQuestion = questionData[category]["clues"][index];
+  cancelTimeout();
+  waitingForQuestionSelect = false;
+  waitingForAnswer = true;
+
+  askQuestion();
+}
+
+function askQuestion(message) {
+  P.resolve(currentQuestion)
+    .then( _ => console.log(currentQuestion) )
+    .then( _ => currentChannel.send(currentQuestion.question) )
+    .then( _ => startQuestionTimer());
+}
+
+function startQuestionTimer() {
+  timer.setTimeout(questionTimeout, QUESTION_ANSWER_TIMEOUT);    
+}
+
+function questionTimeout() {
+  currentChannel.send(`Times up! The answer was ${currentQuestion.answer}`);
+  cleanupAfterQuestion();
+  if (questionsRemaining <= 0) {
+    finalizeGame();
+  } else {
+    askQuestion();
+  }
+}
+
 module.exports = Trivia;

@@ -9,7 +9,7 @@
 
 # TODO for Trivia -
  - if question is answered print (XXX) instead of value
- - Timeout on player prompt - 30 seconds
+
  - Once timeout or player responds with '(category) (value)', print question clue and start timeout
  - Once player answers - if correct, add points, mark question answered, prompt again. if wrong, prompt next player to pick question.
  - show scores on board with questions
@@ -35,3 +35,4 @@
 * Add bluebird
 * Add express
 * commands can expose helpers
+- Timeout on player prompt - 30 seconds
